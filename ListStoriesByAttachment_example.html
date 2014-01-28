@@ -1,0 +1,71 @@
+<html>
+<head>
+  <title>Table</title>
+  <meta name="Name" content="App Example: Stories with Attachments" />
+  <meta name="Version" content="2012.1" />
+  <meta name="Vendor" content="Rally Software" />
+  <script type="text/javascript" src="https://rally1.rallydev.com/apps/1.31/sdk.js"></script>
+  <script type="text/javascript">
+
+var table = null;
+
+function tableExample() {
+	var rallyDataSource = new rally.sdk.data.RallyDataSource('__WORKSPACE_OID__','__PROJECT_OID__','__PROJECT_SCOPING_UP__','__PROJECT_SCOPING_DOWN__');
+	function itemQuery() {
+		var queryObject = {
+  			key: 'stories',
+  			type: 'HierarchicalRequirement',
+			fetch: 'FormattedID,Name,ScheduleState,Description,Attachments,ObjectID,Iteration,PlanEstimate'
+		};
+	rallyDataSource.findAll(queryObject, populateTable);
+	}
+	
+	function populateTable(results) {
+		if (table) {
+			table.destroy();
+		}
+
+	var tableDiv = document.getElementById('aDiv');
+
+	var config = { 'columnKeys'    : ['FormattedID',  'Name',  'Iteration', 'ScheduleState',   'Attachments', 'PlanEstimate',],
+	'columnHeaders' : ['FormattedID',  'Name',  'Iteration', 'ScheduleState',   'Attachments', 'PlanEstimate'],
+	'columnWidths'  : ['100px',        '400px', '200px',     '85px',            '300px',       '100px']
+	};
+	table = new rally.sdk.ui.Table(config);
+	table.addRows(results.stories);
+
+	for (i=0;i<results.stories.length;i++) {
+
+	myStory = results.stories[i];
+	myAttachments = results.stories[i].Attachments;
+	myAttachmentHTML = "";
+
+	for (j=0;j<myAttachments.length;j++) {
+		myAttachmentOID = myAttachments[j].ObjectID;
+		myAttachmentName = myAttachments[j].Name;
+		myAttachmentURL = rally.sdk.util.Context.getServerInfo().getSlmUrl() +"/attachment/"+ myAttachmentOID + "/" + myAttachmentName;
+	
+		myAttachmentHTML += "<div><a href='" + myAttachmentURL + "'>" + myAttachmentName + "</a></div>";
+	}
+
+	if (results.stories[i].Iteration != null) {
+	table.setCell(i, 2, results.stories[i].Iteration.Name);
+	}
+	linkConfig = {item: {FormattedID: myStory.FormattedID, "_ref" : myStory._ref}};
+	storyLink = new rally.sdk.ui.basic.Link(linkConfig);
+	table.setCell(i, 0, storyLink.renderToHtml());
+	table.setCell(i, 4, myAttachmentHTML);
+	}
+table.display(tableDiv);
+
+};
+ itemQuery();
+}
+
+rally.addOnLoad(tableExample);
+  </script>
+</head>
+<body>
+  <div id="aDiv"></div>
+</body>
+</html>
